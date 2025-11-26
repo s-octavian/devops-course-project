@@ -14,3 +14,5 @@ backup_by_date() {
 }
 
 backup_by_date $1
+
+##tar -xzvf [arhiva].tgz [-C folder/ = extracting in directory]
