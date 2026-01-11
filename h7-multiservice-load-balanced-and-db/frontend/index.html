@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Service App Frontend</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+    h1 { color: #0056b3; }
+    .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 800px; margin: 20px auto; }
+
+    input { padding: 8px; border-radius: 5px; border: 1px solid #ccc; margin-right: 5px; }
+    button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 5px; }
+    button:hover { background-color: #0056b3; }
+
+    pre { background-color: #eee; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+
+    .response-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+    .item-list { margin-top: 15px; }
+
+    .item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 10px;
+        border-bottom: 1px solid #ddd;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Multi-Service App Frontend</h1>
+    <p>This frontend interacts with the backend API.</p>
+
+    <div>
+        <input type="text" id="new-item-name" placeholder="Enter new item name">
+        <button onclick="createItem()">Add Item</button>
+    </div>
+
+    <div>
+        <button onclick="getItems()">Refresh Items List</button>
+    </div>
+
+    <div class="response-section">
+        <h2>API Response:</h2>
+        <pre id="api-response">Click a button to fetch data...</pre>
+    </div>
+
+    <div class="response-section">
+        <h2>Items:</h2>
+        <div id="items-container" class="item-list">No items loaded.</div>
+    </div>
+</div>
+
+<script>
+const API_BASE_URL = window.location.origin;
+
+async function getItems() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/items`);
+        const data = await response.json();
+        document.getElementById('api-response').textContent = data.message;
+        renderItems(data.items);
+    } catch (error) {
+        document.getElementById('api-response').textContent = 'Error fetching items: ' + error.message;
+    }
+}
+
+function renderItems(items) {
+    const container = document.getElementById('items-container');
+    if (!items.length) {
+        container.innerHTML = 'No items found.';
+        return;
+    }
+    container.innerHTML = '';
+
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<span>${item.id} ${item.name}</span><button onclick="deleteItem(${item.id})">Delete</button>`;
+        container.appendChild(div);
+    });
+}
+
+async function createItem() {
+    const name = document.getElementById('new-item-name').value.trim();
+    if (!name) { alert('Please enter a name'); return; }
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/items`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        const data = await response.json();
+        document.getElementById('api-response').textContent = data.message;
+        document.getElementById('new-item-name').value = '';
+        getItems();
+    } catch (error) {
+        document.getElementById('api-response').textContent = 'Error creating item: ' + error.message;
+    }
+}
+
+async function deleteItem(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/items/${id}`, { method: 'DELETE' });
+        const data = await response.json();
+        document.getElementById('api-response').textContent = data.message;
+        getItems();
+    } catch (error) {
+        document.getElementById('api-response').textContent = `Error deleting item ${id}: ${error.message}`;
+    }
+}
+
+window.onload = getItems;
+</script>
+</body>
+</html>
+

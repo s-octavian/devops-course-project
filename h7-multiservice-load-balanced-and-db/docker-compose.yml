@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  postgres-db:
+    build: ./db-postgres
+    image: postgressql-db:v1
+    container_name: postgres-db
+    env_file:
+      - ./.env
+    expose:
+      - "5432"
+    volumes:
+      - ./db-postgres/db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  backend-1:
+    build: ./backend-api-1
+    image: backend-flask:v1
+    container_name: backend-1
+    env_file:
+      - ./.env
+    environment:
+      - SERVICE_ID=Backend-1
+      - FLASK_RUN_PORT=5000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-db:5432/${POSTGRES_DB}
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    expose:
+      - "5000"
+
+  backend-2:
+    build: ./backend-api-2
+    image: backend-flask:v1
+    container_name: backend-2
+    env_file:
+      - ./.env
+    environment:
+      - SERVICE_ID=Backend-2
+      - FLASK_RUN_PORT=5000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-db:5432/${POSTGRES_DB}
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    expose:
+      - "5000"
+
+  frontend:
+    build: ./frontend
+    image: frontend-nginx:v1
+    container_name: frontend
+    expose:
+      - "80"
+
+  rproxy:
+    build: ./rproxy
+    image: rproxy:v1
+    container_name: rproxy
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend-1
+      - backend-2
+      - frontend
+

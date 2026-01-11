@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Service App Frontend</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        h1 { color: #0056b3; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 800px; margin: 20px auto; }
+        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+        button:hover { background-color: #0056b3; }
+        pre { background-color: #eee; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+        .response-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Multi-Service App!</h1>
+        <p>This frontend fetches data from a backend API via Nginx.</p>
+
+        <button onclick="fetchStatus()">Fetch API Status</button>
+        <button onclick="fetchData('item1')">Fetch Data (item1)</button>
+        <button onclick="fetchData('itemX')">Fetch Data (itemX)</button>
+
+        <div class="response-section">
+            <h2>API Response:</h2>
+            <pre id="api-response">Click a button to fetch data...</pre>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin; // Points to Nginx, which will proxy to backend
+
+        async function fetchStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/status`);
+                const data = await response.json();
+                document.getElementById('api-response').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('api-response').textContent = 'Error fetching status: ' + error.message;
+                console.error('Error fetching status:', error);
+            }
+        }
+
+        async function fetchData(item) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/data?item=${item}`);
+                const data = await response.json();
+                document.getElementById('api-response').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('api-response').textContent = `Error fetching data for ${item}: ` + error.message;
+                console.error(`Error fetching data for ${item}:`, error);
+            }
+        }
+    </script>
+</body>
+</html>
